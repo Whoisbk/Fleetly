@@ -6,6 +6,7 @@ import 'services/auth_service.dart';
 import 'services/firebase_service.dart';
 import 'services/fleet_data_service.dart';
 import 'services/supabase_service.dart';
+import 'services/theme_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,10 +19,13 @@ Future<void> main() async {
   await authService.initialize();
 
   final fleetDataService = FleetDataService();
+  final themeService = ThemeService();
+  await themeService.initialize();
 
   runApp(FleetlyApp(
     authService: authService,
     fleetDataService: fleetDataService,
+    themeService: themeService,
   ));
 }
 
@@ -30,10 +34,12 @@ class FleetlyApp extends StatelessWidget {
     super.key,
     required this.authService,
     required this.fleetDataService,
+    required this.themeService,
   });
 
   final AuthService authService;
   final FleetDataService fleetDataService;
+  final ThemeService themeService;
 
   @override
   Widget build(BuildContext context) {
@@ -41,13 +47,19 @@ class FleetlyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider.value(value: authService),
         ChangeNotifierProvider.value(value: fleetDataService),
+        ChangeNotifierProvider.value(value: themeService),
       ],
-      child: MaterialApp.router(
-        title: 'Fleetly',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        routerConfig: AppRouter.create(authService),
+      child: Consumer<ThemeService>(
+        builder: (context, themeService, _) {
+          return MaterialApp.router(
+            title: 'Fleetly',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: themeService.themeMode,
+            routerConfig: AppRouter.create(authService),
+          );
+        },
       ),
     );
   }

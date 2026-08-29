@@ -7,35 +7,35 @@ abstract final class AppTheme {
   static ThemeData get light => ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
-        scaffoldBackgroundColor: AppColors.background,
+        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
         colorScheme: const ColorScheme.light(
-          primary: AppColors.textPrimary,
-          onPrimary: AppColors.textOnDark,
-          surface: AppColors.surface,
+          primary: Color(0xFF000000),
+          onPrimary: Color(0xFFFFFFFF),
+          surface: Color(0xFFFFFFFF),
           error: AppColors.error,
         ),
         textTheme: GoogleFonts.interTextTheme(),
         appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.background,
-          foregroundColor: AppColors.textPrimary,
+          backgroundColor: Color(0xFFF5F5F5),
+          foregroundColor: Color(0xFF000000),
           elevation: 0,
           centerTitle: false,
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: AppColors.surface,
+          fillColor: const Color(0xFFFFFFFF),
           errorStyle: AppTextStyles.body(color: AppColors.error).copyWith(fontSize: 13),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.border),
+            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.border),
+            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.textPrimary, width: 1.5),
+            borderSide: const BorderSide(color: Color(0xFF000000), width: 1.5),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
@@ -48,8 +48,8 @@ abstract final class AppTheme {
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         ),
         snackBarTheme: SnackBarThemeData(
-          backgroundColor: AppColors.cardDark,
-          contentTextStyle: AppTextStyles.body(color: AppColors.textOnDark),
+          backgroundColor: const Color(0xFF1A1A1A),
+          contentTextStyle: AppTextStyles.body(color: const Color(0xFFFFFFFF)),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
@@ -60,15 +60,49 @@ abstract final class AppTheme {
         brightness: Brightness.dark,
         scaffoldBackgroundColor: AppColors.darkBackground,
         colorScheme: const ColorScheme.dark(
-          primary: AppColors.textOnDark,
+          primary: Color(0xFFFFFFFF),
+          onPrimary: Color(0xFF000000),
           surface: AppColors.darkSurface,
           error: AppColors.error,
         ),
         textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
         appBarTheme: const AppBarTheme(
           backgroundColor: AppColors.darkBackground,
+          foregroundColor: Color(0xFFFFFFFF),
           elevation: 0,
           centerTitle: false,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: AppColors.darkSurface,
+          errorStyle: AppTextStyles.body(color: AppColors.error).copyWith(fontSize: 13),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFF374151)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFF374151)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFFFFFFFF), width: 1.5),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: AppColors.error),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        ),
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: const Color(0xFFFFFFFF),
+          contentTextStyle: AppTextStyles.body(color: const Color(0xFF000000)),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
       );
 }

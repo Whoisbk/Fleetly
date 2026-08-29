@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/theme_toggle_tile.dart';
 import '../../../services/auth_service.dart';
 import '../widgets/driver_page_header.dart';
 
@@ -58,6 +59,7 @@ class ProfileScreen extends StatelessWidget {
                 onTap: () => context.push(AppRouter.driverChangePassword),
               ),
               const SizedBox(height: 24),
+              const ThemeToggleTile(),
               _ProfileTile(
                 icon: Icons.logout,
                 label: 'Sign Out',
@@ -117,7 +119,7 @@ class _ProfileTile extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+            Icon(Icons.chevron_right, color: AppColors.textSecondary),
           ],
         ),
       ),

@@ -39,7 +39,7 @@ class TimelineEntry extends StatelessWidget {
                 Container(
                   width: 12,
                   height: 12,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: AppColors.textPrimary,
                     shape: BoxShape.circle,
                   ),

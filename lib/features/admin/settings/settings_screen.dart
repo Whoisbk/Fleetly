@@ -5,6 +5,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/theme_toggle_tile.dart';
 import '../../../services/auth_service.dart';
 import '../widgets/admin_page_header.dart';
 
@@ -61,6 +62,8 @@ class SettingsScreen extends StatelessWidget {
             label: 'Change Password',
             onTap: () => context.push(AppRouter.adminChangePassword),
           ),
+          const SizedBox(height: 16),
+          const ThemeToggleTile(),
           const SizedBox(height: 16),
           _SettingsTile(
             icon: Icons.info_outline,
@@ -131,7 +134,7 @@ class _SettingsTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (onTap != null) const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+            if (onTap != null) Icon(Icons.chevron_right, color: AppColors.textSecondary),
           ],
         ),
       ),

@@ -31,13 +31,13 @@ driver_day_id, driver_id, vehicle_id, type, amount, description, receipt_path
 ```
 Types: `fuel` | `maintenance` | `repair` | `other`
 
-## Storage Paths (private buckets)
+## Storage Paths (private `fleet-files` bucket)
 
 ```
-driver-documents/{driver_id}/id.pdf
-driver-documents/{driver_id}/pdp.pdf
-driver-profile-images/{driver_id}/profile.jpg
-expense-receipts/{driver_id}/{expense_id}.jpg
+fleet-files/{driver_id}/documents/id.pdf
+fleet-files/{driver_id}/documents/pdp.pdf
+fleet-files/{driver_id}/profile/profile.jpg
+fleet-files/{driver_id}/receipts/{expense_id}.jpg
 ```
 
 Never store document bytes in PostgreSQL. Use signed URLs for private buckets.

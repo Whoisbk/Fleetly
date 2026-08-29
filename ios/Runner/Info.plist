@@ -45,6 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Fleetly needs access to your photo library to upload ID documents and receipts.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Fleetly needs camera access to capture document photos.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

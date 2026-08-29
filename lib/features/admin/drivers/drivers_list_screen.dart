@@ -107,7 +107,7 @@ class _DriverTile extends StatelessWidget {
             ),
             DriverStatusBadge(status: driver.status),
             const SizedBox(width: 8),
-            const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+            Icon(Icons.chevron_right, color: AppColors.textSecondary),
           ],
         ),
       ),

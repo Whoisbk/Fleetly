@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../core/constants/app_constants.dart';
 import '../models/models.dart';
 import 'firebase_service.dart';
+import 'storage_service.dart';
 import 'supabase_service.dart';
 
 class FleetDataService extends ChangeNotifier {
@@ -399,6 +400,65 @@ class FleetDataService extends ChangeNotifier {
       return null;
     } catch (e) {
       return 'Could not update document: $e';
+    } finally {
+      _isSubmitting = false;
+      notifyListeners();
+    }
+  }
+
+  Future<String?> uploadDriverDocument({
+    required String driverId,
+    required DocumentType documentType,
+    required Uint8List bytes,
+    required String extension,
+  }) async {
+    if (!_useSupabase) {
+      final path = StorageService.documentPath(
+        driverId: driverId,
+        type: documentType,
+        extension: extension,
+      );
+      final doc = DriverDocument(
+        id: 'doc-${documentType.name}',
+        driverId: driverId,
+        documentType: documentType,
+        filePath: path,
+        status: DocumentStatus.pending,
+        uploadedAt: DateTime.now(),
+      );
+      final existing = _documentsByDriver[driverId] ?? [];
+      _documentsByDriver[driverId] = [
+        ...existing.where((d) => d.documentType != documentType),
+        doc,
+      ];
+      notifyListeners();
+      return null;
+    }
+
+    _isSubmitting = true;
+    notifyListeners();
+
+    try {
+      final path = await StorageService.uploadDriverDocument(
+        driverId: driverId,
+        type: documentType,
+        bytes: bytes,
+        extension: extension,
+      );
+
+      await SupabaseService.client.from('driver_documents').upsert({
+        'driver_id': driverId,
+        'document_type': documentType.name,
+        'file_path': path,
+        'status': DocumentStatus.pending.name,
+        'uploaded_at': DateTime.now().toIso8601String(),
+        'rejection_reason': null,
+      }, onConflict: 'driver_id,document_type');
+
+      await loadDriverDocuments(driverId);
+      return null;
+    } catch (e) {
+      return 'Could not upload document: $e';
     } finally {
       _isSubmitting = false;
       notifyListeners();
