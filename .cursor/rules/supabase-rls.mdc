@@ -1,0 +1,47 @@
+---
+description: Supabase RLS policies and security rules
+globs: supabase/**/*
+alwaysApply: false
+---
+
+# Row Level Security
+
+RLS is mandatory. Never rely on Flutter alone for access control.
+
+## Driver Permissions
+
+| Table | Access |
+|-------|--------|
+| profiles | Read/update own only |
+| driver_documents | Read/upload own only |
+| driver_days | CRUD own only |
+| expenses | CRUD own only |
+
+## Driver Restrictions
+
+- Cannot read other drivers' data
+- Cannot change `role` to admin
+- Cannot set own `status` to approved
+- Cannot approve own documents
+
+## Admin Permissions
+
+Full read on drivers, documents, driver_days, expenses, vehicles. Can approve/reject drivers and documents.
+
+## Helper Pattern
+
+Use a `is_admin()` SQL function checking `profiles.role = 'admin'` for admin policies. Driver policies use `auth.uid() = driver_id`.
+
+```sql
+-- Example: driver reads own days
+CREATE POLICY "drivers_read_own_days" ON driver_days
+  FOR SELECT USING (auth.uid() = driver_id);
+
+-- Example: admin reads all
+CREATE POLICY "admin_read_all_days" ON driver_days
+  FOR SELECT USING (is_admin());
+```
+
+## Storage
+
+All buckets private. Drivers upload to their own `{driver_id}/` prefix. Admins read via signed URLs.

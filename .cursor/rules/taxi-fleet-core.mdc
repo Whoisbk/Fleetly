@@ -1,0 +1,43 @@
+---
+description: Taxi fleet app — architecture, MVP scope, and build priorities
+alwaysApply: true
+---
+
+# Taxi Fleet Management App
+
+Replace physical driver logbooks with a digital system for a taxi fleet.
+
+## Stack
+
+- **Flutter** — single app, role-based navigation (do not create separate admin/driver apps)
+- **Firebase Auth** — sign up, sign in, password management (no email rate limits from Supabase)
+- **Supabase** — PostgreSQL database, Storage buckets, RLS (via Firebase JWT)
+
+## Roles & Navigation
+
+```
+Login → check role → admin: AdminDashboard | driver: DriverDashboard
+```
+
+Drivers must be `approved` before accessing the app. Enforce in **both** Flutter routing and Supabase RLS.
+
+Driver status gates: `pending` → PendingScreen | `rejected` → RejectedScreen | `suspended` → SuspendedScreen | `approved` → DriverDashboard
+
+## MVP Priority
+
+The killer feature is the **daily driver log** (earnings + expenses + net), not auth polish.
+
+Build order:
+1. Database schema + RLS
+2. Driver onboarding (signup, documents, admin approval)
+3. Daily log flow (start day → add earnings/expenses → end day → history)
+4. Admin dashboard (drivers, approvals, fleet totals)
+5. Reporting (phase 6)
+
+## Admin vs Driver
+
+| Admin | Driver |
+|-------|--------|
+| Dashboard, driver list, approvals | Dashboard, daily log, profile |
+| View all documents, check-ins, expenses | Own data only |
+| Manage vehicles (later) | Upload ID/PDP, check in, record earnings/expenses |

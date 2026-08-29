@@ -1,0 +1,110 @@
+---
+description: Modern UI theme — colors, typography, and component patterns
+globs: lib/**/*
+alwaysApply: false
+---
+
+# UI Theme & Design System
+
+Modern, high-contrast, card-based UI inspired by fitness-tracking apps. Clean, breathable, accessible — important for older admins and drivers using the app on the go.
+
+## Color Palette
+
+```dart
+// Backgrounds
+background:       #F5F5F5   // off-white app scaffold
+surface:          #FFFFFF   // white cards
+cardDark:         #1A1A1A   // hero/feature cards
+
+// Text
+textPrimary:      #000000
+textSecondary:    #6B7280
+textOnDark:       #FFFFFF
+
+// Pastel accents (data cards, charts, categories)
+lavender:         #E8DFF5   // earnings, stats
+mint:             #D3EDE2   // fuel, active/online
+peach:            #F9E8D9   // maintenance, warnings
+skyBlue:          #D6EAF8   // other expenses, info
+
+// Functional
+accent:           #2DD4BF   // mint-cyan highlights, success
+error:            #EF4444
+```
+
+Support both **light** (primary) and **dark** modes. Dark mode: charcoal scaffold, dark cards with subtle pink/lavender gradient glow at top.
+
+## Typography
+
+- Font: **Inter** (or SF Pro / system sans-serif)
+- Page titles: `FontWeight.w800`, 28–32sp, left-aligned
+- Metric numbers: `FontWeight.w900`, 36–48sp (e.g. "R1,850", "24")
+- Labels: 12–13sp, gray, sometimes uppercase in pill badges
+- Body: 15–16sp, generous line height (1.5)
+
+## Shape & Spacing
+
+- **Border radius**: 24–32px on cards, buttons, inputs — everything feels soft and modern
+- **Padding**: 20–24px inside cards; 16px screen horizontal padding
+- **Shadows**: minimal — rely on color contrast, not heavy elevation
+- **Icons**: thin-stroke outline icons; circular frames for avatar/back/actions
+
+## Core Components
+
+### Pill Segmented Control (tabs/filters)
+- Active: solid black bg, white text
+- Inactive: white/transparent bg, thin gray border, black text
+- Use for: Connection/Statistics/Shop → **Today | Week | Month** or **Drivers | Fleet | Reports**
+
+### Hero Card (dark feature card)
+- Large `cardDark` container, radius 32
+- Left: bold label + oversized metric; right: inset image or icon on pastel gradient
+- Carousel dots at bottom for swappable summaries
+- Taxi app: "Today's Fleet — R42,850 earnings" or driver "Net R300"
+
+### Pastel Data Cards
+- Soft tinted backgrounds (lavender/mint/peach) with rounded corners
+- Thin vertical bar charts, segmented progress bars, "View All >" link top-right
+- Map colors: lavender = earnings, mint = fuel, peach = maintenance, skyBlue = other
+
+### Timeline (driver history)
+- Vertical line left with circular nodes
+- Each day = pastel card: date, earnings, fuel, expenses, net
+
+### Floating Bottom Nav
+- Dark pill-shaped bar, rounded ends, 4–5 outline icons
+- Driver: Home, Log, Add, History, Profile
+- Admin: Dashboard, Drivers, Fleet, Reports, Settings
+
+### Primary CTA
+- Wide pill button, black bg, white text + chevron (`Save >>`, `Check In >>`)
+- Reject/secondary: white pill, black border
+
+## Screen Mapping
+
+| Screen | Pattern |
+|--------|---------|
+| Driver dashboard | Hero card (today's net) + quick-action pills + recent timeline |
+| Admin dashboard | Dark stat cards + pastel breakdown cards + pending approvals list |
+| Daily log | Segmented steps, large currency input, pill type selector |
+| Driver approval | White card, doc previews, Approve (black) / Reject (outlined) |
+| Vehicle detail | Large mint card with vehicle image + circular shift progress |
+
+## Flutter Implementation
+
+```
+lib/core/theme/
+├── app_colors.dart
+├── app_text_styles.dart
+├── app_theme.dart          # ThemeData light + dark
+└── app_decorations.dart    # border radius, card shapes
+lib/core/widgets/
+├── pill_segment.dart
+├── hero_stat_card.dart
+├── pastel_data_card.dart
+├── timeline_entry.dart
+├── floating_bottom_nav.dart
+└── primary_button.dart
+```
+
+Always use theme tokens — never hardcode colors in feature screens.

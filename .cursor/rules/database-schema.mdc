@@ -1,0 +1,49 @@
+---
+description: Supabase database schema for taxi fleet app
+globs: supabase/**/*
+alwaysApply: false
+---
+
+# Database Schema
+
+Use `driver_days` (not `check_ins`) — a day record is more than arrival.
+
+## Core Tables
+
+### `profiles` (id = auth.users.id)
+`role`: admin | driver · `status`: pending | approved | rejected | suspended · first_name, last_name, phone, email, profile_photo
+
+### `driver_documents`
+`document_type`: id | pdp · `file_path` (Storage path, not file bytes) · `status`: pending | approved | rejected
+
+### `vehicles` + `driver_vehicle`
+Create vehicles now even if V1 is light. `driver_vehicle` tracks assignment history with start_date/end_date.
+
+### `driver_days` (core MVP table)
+```
+driver_id, vehicle_id, date, started_at, ended_at,
+starting_odometer, ending_odometer, total_earnings, notes, status
+```
+
+### `expenses` (linked to driver_days)
+```
+driver_day_id, driver_id, vehicle_id, type, amount, description, receipt_path
+```
+Types: `fuel` | `maintenance` | `repair` | `other`
+
+## Storage Paths (private buckets)
+
+```
+driver-documents/{driver_id}/id.pdf
+driver-documents/{driver_id}/pdp.pdf
+driver-profile-images/{driver_id}/profile.jpg
+expense-receipts/{driver_id}/{expense_id}.jpg
+```
+
+Never store document bytes in PostgreSQL. Use signed URLs for private buckets.
+
+## Example Daily Record
+
+```
+Thabo — 29 Aug: Earnings R1,850 | Fuel R350 | Maintenance R1,200 | Net R300
+```

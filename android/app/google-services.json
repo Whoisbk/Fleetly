@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "895510156606",
+    "firebase_url": "https://fir-test-37f31-default-rtdb.firebaseio.com",
+    "project_id": "fir-test-37f31",
+    "storage_bucket": "fir-test-37f31.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:895510156606:android:fe90edd33f6473ab06886f",
+        "android_client_info": {
+          "package_name": "com.taxifleet.taxi_fleet_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAERsSoPvTu9z2Zm8kndQPqQYzLr_Tkc9M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

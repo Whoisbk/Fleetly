@@ -1,0 +1,53 @@
+---
+description: Flutter project structure and UI patterns
+globs: lib/**/*
+alwaysApply: false
+---
+
+# Flutter Structure
+
+Follow the **UI theme rule** (`ui-theme.mdc`) for all screens — modern card-based layout, pastel data cards, pill controls, dark hero cards.
+
+```
+lib/
+├── core/          # router, theme, constants, utils
+├── features/
+│   ├── auth/      # login, signup, onboarding
+│   ├── driver/    # dashboard, profile, documents, check_in, expenses, history
+│   ├── admin/     # dashboard, drivers, approvals, reports
+│   └── vehicles/
+├── models/
+├── services/      # auth_service, storage_service, supabase_service
+└── main.dart
+```
+
+## Driver Dashboard (keep simple)
+
+One screen answers: "What did this driver do today?"
+
+- Today's status + Check In button
+- Quick actions: Add Earnings, Add Fuel, Add Expense
+- Recent days with earnings/fuel/expenses summary
+
+## Daily Log Flow
+
+```
+START DAY → select taxi, date, starting KM → work →
+add earnings/fuel/expenses/notes → END DAY → submit
+```
+
+## Driver Onboarding (3 steps)
+
+1. Personal info (name, phone)
+2. Upload ID + PDP
+3. Review → submit → PendingApprovalScreen
+
+## Admin Approval Screen
+
+Show driver info + document previews with Approve/Reject actions. On approve: `profiles.status = approved`.
+
+## Services
+
+- `supabase_service.dart` — client init, queries
+- `auth_service.dart` — login, signup, role/status checks
+- `storage_service.dart` — upload docs/receipts, signed URL retrieval

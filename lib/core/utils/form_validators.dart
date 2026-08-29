@@ -1,0 +1,90 @@
+abstract final class FormValidators {
+  static String? required(String? value, {String field = 'This field'}) {
+    if (value == null || value.trim().isEmpty) {
+      return '$field is required';
+    }
+    return null;
+  }
+
+  static String? email(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Email is required';
+    }
+    final email = value.trim();
+    final emailRegex = RegExp(r'^[\w.%+-]+@[\w.-]+\.\w{2,}$');
+    if (!emailRegex.hasMatch(email)) {
+      return 'Enter a valid email address';
+    }
+    return null;
+  }
+
+  static String? phone(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Phone number is required';
+    }
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    if (digits.length < 10) {
+      return 'Enter a valid phone number';
+    }
+    return null;
+  }
+
+  static String? password(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Password is required';
+    }
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    return null;
+  }
+
+  static String? confirmPassword(String? value, String password) {
+    if (value == null || value.isEmpty) {
+      return 'Please confirm your password';
+    }
+    if (value != password) {
+      return 'Passwords do not match';
+    }
+    return null;
+  }
+
+  static String? amount(String? value, {String field = 'Amount'}) {
+    if (value == null || value.trim().isEmpty) {
+      return '$field is required';
+    }
+    final amount = double.tryParse(value.replaceAll(',', '').trim());
+    if (amount == null) {
+      return 'Enter a valid amount';
+    }
+    if (amount <= 0) {
+      return '$field must be greater than zero';
+    }
+    return null;
+  }
+
+  static String? optionalAmount(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final amount = double.tryParse(value.replaceAll(',', '').trim());
+    if (amount == null) return 'Enter a valid amount';
+    if (amount < 0) return 'Amount cannot be negative';
+    return null;
+  }
+
+  static String? odometer(String? value, {int? minValue}) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Odometer reading is required';
+    }
+    final km = int.tryParse(value.replaceAll(',', '').trim());
+    if (km == null) {
+      return 'Enter a valid number';
+    }
+    if (km < 0) {
+      return 'Odometer cannot be negative';
+    }
+    if (minValue != null && km < minValue) {
+      return 'Must be greater than starting KM ($minValue)';
+    }
+    return null;
+  }
+}
