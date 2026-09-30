@@ -57,8 +57,8 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
 
-    AppToast.success(context, 'Account created — awaiting admin approval');
-    context.go(AppRouter.pending);
+    AppToast.success(context, 'Account created — upload your documents next');
+    context.go(AppRouter.onboardingDocuments);
   }
 
   @override

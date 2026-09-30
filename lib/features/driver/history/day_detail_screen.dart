@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/load_error_view.dart';
 import '../../../core/widgets/summary_row.dart';
 import '../../../models/models.dart';
 import '../../../services/fleet_data_service.dart';
@@ -17,8 +18,19 @@ class DayDetailScreen extends StatelessWidget {
     final day = FleetDataService.getDayById(dayId);
     if (day == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Not Found')),
-        body: const Center(child: Text('Day not found')),
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
+          title: Text('Day', style: AppTextStyles.sectionTitle()),
+        ),
+        body: LoadErrorView(
+          title: 'Day unavailable',
+          message: 'This day is not on this device. Go back and open it from your history.',
+          actionLabel: 'Go back',
+          onRetry: () => context.pop(),
+        ),
       );
     }
 

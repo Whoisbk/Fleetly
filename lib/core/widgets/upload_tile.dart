@@ -8,6 +8,7 @@ class UploadTile extends StatelessWidget {
     required this.label,
     this.subtitle,
     this.isUploaded = false,
+    this.isHighlighted = false,
     this.fileName,
     this.onTap,
   });
@@ -15,6 +16,7 @@ class UploadTile extends StatelessWidget {
   final String label;
   final String? subtitle;
   final bool isUploaded;
+  final bool isHighlighted;
   final String? fileName;
   final VoidCallback? onTap;
 
@@ -22,13 +24,21 @@ class UploadTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isUploaded ? AppColors.mint : AppColors.skyBlue,
+          color: isUploaded
+              ? AppColors.mint
+              : isHighlighted
+                  ? AppColors.lavender
+                  : AppColors.skyBlue,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(
+            color: isHighlighted ? AppColors.textPrimary : AppColors.border,
+            width: isHighlighted ? 2 : 1,
+          ),
         ),
         child: Row(
           children: [

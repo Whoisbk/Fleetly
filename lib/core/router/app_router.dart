@@ -7,6 +7,8 @@ import '../../features/admin/fleet/vehicle_form_screen.dart';
 import '../../features/admin/shell/admin_shell_screen.dart';
 import '../../features/auth/forgot_password/forgot_password_screen.dart';
 import '../../features/auth/login/login_screen.dart';
+import '../../features/auth/onboarding/onboarding_documents_screen.dart';
+import '../../features/auth/onboarding/onboarding_review_screen.dart';
 import '../../features/auth/signup/signup_screen.dart';
 import '../../features/auth/status/account_status_screen.dart';
 import '../../features/driver/check_in/check_in_screen.dart';
@@ -31,6 +33,8 @@ class AppRouter {
   static const pending = '/pending';
   static const rejected = '/rejected';
   static const suspended = '/suspended';
+  static const onboardingDocuments = '/onboarding/documents';
+  static const onboardingReview = '/onboarding/review';
   static const driverHome = '/driver';
   static const driverCheckIn = '/driver/check-in';
   static const driverEndDay = '/driver/end-day';
@@ -60,14 +64,20 @@ class AppRouter {
         final isAuthRoute =
             path == login || path == signup || path == forgotPassword;
         final isStatusRoute = path == pending || path == rejected || path == suspended;
+        final isOnboardingRoute =
+            path == onboardingDocuments || path == onboardingReview;
 
         if (user == null) {
           return isAuthRoute ? null : login;
         }
 
         if (user.isAdmin) {
-          if (isAuthRoute) return adminHome;
+          if (isAuthRoute || isOnboardingRoute || isStatusRoute) return adminHome;
           return null;
+        }
+
+        if (authService.needsOnboarding) {
+          return isOnboardingRoute ? null : onboardingDocuments;
         }
 
         switch (user.status) {
@@ -78,13 +88,21 @@ class AppRouter {
           case UserStatus.suspended:
             return path == suspended ? null : suspended;
           case UserStatus.approved:
-            if (isAuthRoute || isStatusRoute) return driverHome;
+            if (isAuthRoute || isStatusRoute || isOnboardingRoute) return driverHome;
             return null;
         }
       },
       routes: [
         GoRoute(path: login, builder: (_, __) => const LoginScreen()),
         GoRoute(path: signup, builder: (_, __) => const SignupScreen()),
+        GoRoute(
+          path: onboardingDocuments,
+          builder: (_, __) => const OnboardingDocumentsScreen(),
+        ),
+        GoRoute(
+          path: onboardingReview,
+          builder: (_, __) => const OnboardingReviewScreen(),
+        ),
         GoRoute(
           path: forgotPassword,
           builder: (_, state) => ForgotPasswordScreen(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/load_error_view.dart';
 import '../../../core/widgets/timeline_entry.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/fleet_data_service.dart';
@@ -36,6 +37,16 @@ class _DriverHistoryScreenState extends State<DriverHistoryScreen> {
       return const SafeArea(child: Center(child: CircularProgressIndicator()));
     }
 
+    if (fleet.error != null && days.isEmpty) {
+      return SafeArea(
+        child: LoadErrorView(
+          title: 'History unavailable',
+          message: fleet.error!,
+          onRetry: _refresh,
+        ),
+      );
+    }
+
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: () async => _refresh(),
@@ -63,6 +74,15 @@ class _DriverHistoryScreenState extends State<DriverHistoryScreen> {
                     style: AppTextStyles.body(color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 24),
+                  if (fleet.error != null) ...[
+                    LoadErrorView(
+                      title: 'Couldn\'t refresh',
+                      message: fleet.error!,
+                      onRetry: _refresh,
+                      compact: true,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   ...days.asMap().entries.map((entry) {
                     final day = entry.value;
                     final colors = [AppColors.lavender, AppColors.mint, AppColors.peach];

@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_toast.dart';
 import '../../../core/utils/document_picker.dart';
+import '../../../core/widgets/drop_upload_target.dart';
 import '../../../core/widgets/pill_segment.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/upload_tile.dart';
@@ -35,7 +36,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
 
   Future<void> _pickFile() async {
     try {
-      final file = await DocumentPicker.pickDocument();
+      final file = await DocumentPicker.pickFromSource(context);
       if (file == null || !mounted) return;
       setState(() => _selectedFile = file);
     } on DocumentPickerException catch (e) {
@@ -124,12 +125,23 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
                 labelBuilder: (t) => t == DocumentType.id ? 'ID Document' : 'PDP',
               ),
               const SizedBox(height: 32),
-              UploadTile(
-                label: _type == DocumentType.id ? 'ID Document' : 'PDP',
-                subtitle: 'PDF or image — tap to select',
-                isUploaded: _selectedFile != null,
-                fileName: _selectedFile?.name,
-                onTap: isBusy ? null : _pickFile,
+              DropUploadTarget(
+                enabled: !isBusy,
+                onDropped: (file) {
+                  if (isBusy) return;
+                  setState(() => _selectedFile = file);
+                },
+                onError: (message) => AppToast.error(context, message),
+                builder: (hovering) => UploadTile(
+                  label: _type == DocumentType.id ? 'ID Document' : 'PDP',
+                  subtitle: hovering
+                      ? 'Drop to upload'
+                      : 'Tap or drop a file from your computer',
+                  isUploaded: _selectedFile != null,
+                  isHighlighted: hovering,
+                  fileName: _selectedFile?.name,
+                  onTap: isBusy ? null : _pickFile,
+                ),
               ),
               const SizedBox(height: 16),
               Container(

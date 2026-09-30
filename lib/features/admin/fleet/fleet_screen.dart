@@ -6,6 +6,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/widgets/load_error_view.dart';
 import '../../../core/widgets/pill_segment.dart';
 import '../../../models/models.dart';
 import '../../../services/fleet_data_service.dart';
@@ -85,10 +86,25 @@ class _FleetScreenState extends State<FleetScreen> {
             child: RefreshIndicator(
               onRefresh: () async => _loadTabData(),
               child: _tab == FleetTab.vehicles
-                  ? _VehiclesList(vehicles: fleet.vehicles, loading: fleet.adminLoading)
+                  ? _VehiclesList(
+                      vehicles: fleet.vehicles,
+                      loading: fleet.adminLoading,
+                      error: fleet.error,
+                      onRetry: _loadTabData,
+                    )
                   : _tab == FleetTab.checkIns
-                      ? _CheckInsList(checkIns: fleet.fleetCheckIns, loading: fleet.adminLoading)
-                      : _ExpensesList(expenses: fleet.fleetExpenses, loading: fleet.adminLoading),
+                      ? _CheckInsList(
+                          checkIns: fleet.fleetCheckIns,
+                          loading: fleet.adminLoading,
+                          error: fleet.error,
+                          onRetry: _loadTabData,
+                        )
+                      : _ExpensesList(
+                          expenses: fleet.fleetExpenses,
+                          loading: fleet.adminLoading,
+                          error: fleet.error,
+                          onRetry: _loadTabData,
+                        ),
             ),
           ),
         ],
@@ -98,10 +114,17 @@ class _FleetScreenState extends State<FleetScreen> {
 }
 
 class _VehiclesList extends StatelessWidget {
-  const _VehiclesList({required this.vehicles, required this.loading});
+  const _VehiclesList({
+    required this.vehicles,
+    required this.loading,
+    required this.error,
+    required this.onRetry,
+  });
 
   final List<Vehicle> vehicles;
   final bool loading;
+  final String? error;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -109,6 +132,18 @@ class _VehiclesList extends StatelessWidget {
       return ListView(children: [
         SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
       ]);
+    }
+    if (error != null && vehicles.isEmpty) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          LoadErrorView(
+            title: 'Vehicles unavailable',
+            message: error!,
+            onRetry: onRetry,
+          ),
+        ],
+      );
     }
     if (vehicles.isEmpty) {
       return ListView(
@@ -171,10 +206,17 @@ class _VehiclesList extends StatelessWidget {
 }
 
 class _CheckInsList extends StatelessWidget {
-  const _CheckInsList({required this.checkIns, required this.loading});
+  const _CheckInsList({
+    required this.checkIns,
+    required this.loading,
+    required this.error,
+    required this.onRetry,
+  });
 
   final List<AdminDriverDay> checkIns;
   final bool loading;
+  final String? error;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -182,6 +224,18 @@ class _CheckInsList extends StatelessWidget {
       return ListView(children: [
         SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
       ]);
+    }
+    if (error != null && checkIns.isEmpty) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          LoadErrorView(
+            title: 'Check-ins unavailable',
+            message: error!,
+            onRetry: onRetry,
+          ),
+        ],
+      );
     }
     if (checkIns.isEmpty) {
       return ListView(
@@ -236,10 +290,17 @@ class _CheckInsList extends StatelessWidget {
 }
 
 class _ExpensesList extends StatelessWidget {
-  const _ExpensesList({required this.expenses, required this.loading});
+  const _ExpensesList({
+    required this.expenses,
+    required this.loading,
+    required this.error,
+    required this.onRetry,
+  });
 
   final List<AdminExpense> expenses;
   final bool loading;
+  final String? error;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -247,6 +308,18 @@ class _ExpensesList extends StatelessWidget {
       return ListView(children: [
         SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
       ]);
+    }
+    if (error != null && expenses.isEmpty) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          LoadErrorView(
+            title: 'Expenses unavailable',
+            message: error!,
+            onRetry: onRetry,
+          ),
+        ],
+      );
     }
     if (expenses.isEmpty) {
       return ListView(

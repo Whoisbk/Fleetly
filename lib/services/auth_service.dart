@@ -10,12 +10,19 @@ class AuthService extends ChangeNotifier {
   UserProfile? _currentUser;
   bool _isLoading = false;
   String? _error;
+  bool _hasCompletedOnboarding = false;
 
   UserProfile? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _currentUser != null;
   bool get awaitingEmailConfirmation => false;
+  bool get hasCompletedOnboarding => _hasCompletedOnboarding;
+  bool get needsOnboarding =>
+      _currentUser != null &&
+      !_currentUser!.isAdmin &&
+      _currentUser!.status == UserStatus.pending &&
+      !_hasCompletedOnboarding;
 
   bool get _useFirebase =>
       FirebaseService.isAvailable && AppConstants.isSupabaseConfigured;
@@ -35,6 +42,7 @@ class AuthService extends ChangeNotifier {
     FirebaseService.auth.authStateChanges().listen((user) async {
       if (user == null) {
         _currentUser = null;
+        _hasCompletedOnboarding = false;
         notifyListeners();
         return;
       }
@@ -49,6 +57,7 @@ class AuthService extends ChangeNotifier {
     try {
       if (!_useFirebase) {
         _currentUser = _demoUserForEmail(email);
+        _hasCompletedOnboarding = _currentUser!.id != 'demo-driver-new';
         notifyListeners();
         return true;
       }
@@ -94,6 +103,7 @@ class AuthService extends ChangeNotifier {
 
     try {
       if (!_useFirebase) {
+        _hasCompletedOnboarding = false;
         _currentUser = UserProfile(
           id: 'demo-driver-new',
           email: email,
@@ -289,6 +299,12 @@ class AuthService extends ChangeNotifier {
       await FirebaseService.auth.signOut();
     }
     _currentUser = null;
+    _hasCompletedOnboarding = false;
+    notifyListeners();
+  }
+
+  void completeOnboarding() {
+    _hasCompletedOnboarding = true;
     notifyListeners();
   }
 
@@ -344,6 +360,7 @@ class AuthService extends ChangeNotifier {
       }
 
       _currentUser = _profileFromJson(data);
+      await _refreshOnboardingStatus(userId);
       _error = null;
       notifyListeners();
     } catch (e) {
@@ -378,6 +395,34 @@ class AuthService extends ChangeNotifier {
       status: _parseStatus(json['status'] as String?),
       profilePhoto: json['profile_photo'] as String?,
     );
+  }
+
+  Future<void> _refreshOnboardingStatus(String userId) async {
+    final user = _currentUser;
+    if (user == null || user.isAdmin || user.status != UserStatus.pending) {
+      _hasCompletedOnboarding = true;
+      return;
+    }
+
+    if (!_useFirebase) {
+      return;
+    }
+
+    try {
+      final rows = await SupabaseService.client
+          .from('driver_documents')
+          .select('document_type')
+          .eq('driver_id', userId);
+
+      final types = <String>{};
+      for (final row in rows as List) {
+        final type = (row as Map)['document_type'] as String?;
+        if (type != null) types.add(type);
+      }
+      _hasCompletedOnboarding = types.contains('id') && types.contains('pdp');
+    } catch (_) {
+      _hasCompletedOnboarding = false;
+    }
   }
 
   UserRole _parseRole(String? role) => switch (role) {

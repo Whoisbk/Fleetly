@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/hero_stat_card.dart';
+import '../../../core/widgets/load_error_view.dart';
 import '../../../core/widgets/pastel_data_card.dart';
 import '../../../models/models.dart';
 import '../../../services/fleet_data_service.dart';
@@ -45,7 +46,22 @@ class _ReportsScreenState extends State<ReportsScreen> {
             const SizedBox(height: 24),
             if (fleet.adminLoading && week == null && month == null)
               const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))
+            else if (fleet.error != null && week == null && month == null)
+              LoadErrorView(
+                title: 'Reports unavailable',
+                message: fleet.error!,
+                onRetry: () => fleet.loadReports(),
+              )
             else ...[
+              if (fleet.error != null) ...[
+                LoadErrorView(
+                  title: 'Couldn\'t refresh',
+                  message: fleet.error!,
+                  onRetry: () => fleet.loadReports(),
+                  compact: true,
+                ),
+                const SizedBox(height: 16),
+              ],
               if (week != null) _ReportSection(report: week),
               if (month != null) ...[
                 const SizedBox(height: 24),

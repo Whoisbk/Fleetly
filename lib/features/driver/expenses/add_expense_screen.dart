@@ -1,9 +1,11 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_toast.dart';
+import '../../../core/utils/document_picker.dart';
 import '../../../core/utils/form_validators.dart';
 import '../../../core/widgets/pill_segment.dart';
 import '../../../core/widgets/primary_button.dart';
@@ -26,7 +28,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
-  bool _receiptUploaded = false;
+  PlatformFile? _receipt;
 
   static const _expenseTypes = [
     ExpenseType.maintenance,
@@ -46,6 +48,28 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     _amountController.dispose();
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickReceipt() async {
+    try {
+      final file = await DocumentPicker.pickFromSource(
+        context,
+        title: 'Add receipt',
+        subtitle: 'Take a photo of the receipt, or choose one already on the phone.',
+      );
+      if (file == null || !mounted) return;
+      if (DocumentPicker.extensionFor(file) == null || file.bytes == null) {
+        AppToast.warning(context, 'Use a PDF or image for the receipt');
+        return;
+      }
+      setState(() => _receipt = file);
+    } on DocumentPickerException catch (e) {
+      if (!mounted) return;
+      AppToast.error(context, e.message);
+    } catch (_) {
+      if (!mounted) return;
+      AppToast.error(context, 'Could not select the receipt. Try again.');
+    }
   }
 
   Future<void> _save() async {
@@ -74,6 +98,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       return;
     }
 
+    final receipt = _receipt;
+    final receiptExtension = receipt == null ? null : DocumentPicker.extensionFor(receipt);
+    if (receipt != null && (receipt.bytes == null || receiptExtension == null)) {
+      AppToast.warning(context, 'Use a PDF or image for the receipt');
+      return;
+    }
+
     final error = await fleet.addExpenseEntry(
       driverId: user.id,
       driverDayId: today.id,
@@ -81,6 +112,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       type: _type,
       amount: FleetDataService.parseAmount(_amountController.text),
       description: _descriptionController.text.trim(),
+      receiptBytes: receipt?.bytes,
+      receiptExtension: receiptExtension,
     );
 
     if (!mounted) return;
@@ -91,7 +124,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     }
 
     context.pop();
-    AppToast.success(context, '${_labelFor(_type)} expense saved');
+    AppToast.success(
+      context,
+      receipt == null
+          ? '${_labelFor(_type)} expense saved'
+          : '${_labelFor(_type)} expense and receipt saved',
+    );
   }
 
   String _labelFor(ExpenseType type) => switch (type) {
@@ -160,11 +198,21 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 const SizedBox(height: 20),
                 UploadTile(
                   label: 'Receipt',
-                  subtitle: 'Optional — tap to upload',
-                  isUploaded: _receiptUploaded,
-                  fileName: _receiptUploaded ? 'receipt.jpg' : null,
-                  onTap: () => setState(() => _receiptUploaded = true),
+                  subtitle: 'Optional — take a photo or choose a file',
+                  isUploaded: _receipt != null,
+                  fileName: _receipt?.name,
+                  onTap: fleet.isSubmitting ? null : _pickReceipt,
                 ),
+                if (_receipt != null) ...[
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: fleet.isSubmitting ? null : () => setState(() => _receipt = null),
+                      child: const Text('Remove receipt'),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 32),
                 PrimaryButton(
                   label: 'Save',

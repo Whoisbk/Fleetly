@@ -54,6 +54,11 @@ class FleetDataService extends ChangeNotifier {
   List<DriverDocument> documentsForDriver(String driverId) =>
       _documentsByDriver[driverId] ?? [];
 
+  bool hasRequiredDocuments(String driverId) {
+    final types = documentsForDriver(driverId).map((d) => d.documentType).toSet();
+    return types.contains(DocumentType.id) && types.contains(DocumentType.pdp);
+  }
+
   Vehicle? assignedVehicleForDriver(String driverId) =>
       _assignedVehicleByDriver[driverId];
 
@@ -65,56 +70,22 @@ class FleetDataService extends ChangeNotifier {
   bool get _useSupabase =>
       AppConstants.isSupabaseConfigured && FirebaseService.isAvailable;
 
-  // Static accessors for screens not yet wired to Provider (use cache or demo data)
   static Vehicle? get assignedVehicleOrNull => _instance?.assignedVehicle;
 
-  static Vehicle get assignedVehicleStatic =>
-      assignedVehicleOrNull ?? _demoVehicle;
-
-  static DriverDay? get todayDriverDayOrNull => _instance?.todayDriverDay;
-
-  static DriverDay get todayDriverDayStatic =>
-      todayDriverDayOrNull ?? _demoTodayDriverDay;
-
-  static List<DriverDay> get recentDriverDaysStatic =>
-      _instance?.recentDriverDays.isNotEmpty == true
-          ? _instance!.recentDriverDays
-          : _demoRecentDriverDays;
-
-  static List<Expense> get todayExpensesStatic =>
-      _instance?.todayExpenses.isNotEmpty == true
-          ? _instance!.todayExpenses
-          : _demoTodayExpenses;
-
-  static FleetSummary get fleetSummaryStatic =>
-      _instance?.fleetSummary ?? _demoFleetSummary;
-
-  static List<UserProfile> get pendingDriversStatic =>
-      _instance?.pendingDrivers.isNotEmpty == true
-          ? _instance!.pendingDrivers
-          : _demoPendingDrivers;
-
-  static List<DriverDocument> get driverDocuments => _demoDriverDocuments;
-
   static DriverDay? getDayById(String id) {
-    if (_instance != null) {
-      try {
-        return _instance!.recentDriverDays.firstWhere((d) => d.id == id);
-      } catch (_) {}
-      if (_instance!.todayDriverDay?.id == id) return _instance!.todayDriverDay;
+    final instance = _instance;
+    if (instance == null) return null;
+    for (final day in instance.recentDriverDays) {
+      if (day.id == id) return day;
     }
-    try {
-      return _demoRecentDriverDays.firstWhere((d) => d.id == id);
-    } catch (_) {
-      return null;
-    }
+    final today = instance.todayDriverDay;
+    if (today?.id == id) return today;
+    return null;
   }
 
   static List<Expense> getExpensesForDay(String dayId) {
-    if (_instance != null && _instance!._expensesByDay.containsKey(dayId)) {
-      return _instance!._expensesByDay[dayId]!;
-    }
-    return _demoExpensesForDay(dayId);
+    final cached = _instance?._expensesByDay[dayId];
+    return cached ?? const [];
   }
 
   Future<void> loadAdminDashboard() async {
@@ -196,10 +167,7 @@ class FleetDataService extends ChangeNotifier {
       await _loadRecentActivity();
       _error = null;
     } catch (e) {
-      _error = 'Could not load dashboard: $e';
-      _fleetSummary ??= _demoFleetSummary;
-      _pendingDrivers = _demoPendingDrivers;
-      _recentActivity = _demoActivity;
+      _failLoad(e, 'We couldn\'t load the dashboard.');
     } finally {
       _adminLoading = false;
       notifyListeners();
@@ -234,6 +202,7 @@ class FleetDataService extends ChangeNotifier {
     }
 
     _adminLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
@@ -246,9 +215,9 @@ class FleetDataService extends ChangeNotifier {
       _allDrivers = (rows as List)
           .map((row) => UserProfile.fromJson(row as Map<String, dynamic>))
           .toList();
+      _error = null;
     } catch (e) {
-      _error = 'Could not load drivers: $e';
-      _allDrivers = _demoPendingDrivers;
+      _failLoad(e, 'We couldn\'t load the driver list.');
     } finally {
       _adminLoading = false;
       notifyListeners();
@@ -282,7 +251,7 @@ class FleetDataService extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      _error = 'Could not load driver: $e';
+      _failLoad(e, 'We couldn\'t load this driver.');
       notifyListeners();
     }
   }
@@ -310,7 +279,7 @@ class FleetDataService extends ChangeNotifier {
       }
       notifyListeners();
     } catch (e) {
-      _error = 'Could not load vehicle assignment: $e';
+      _failLoad(e, 'We couldn\'t load the vehicle assignment.');
       notifyListeners();
     }
   }
@@ -467,20 +436,25 @@ class FleetDataService extends ChangeNotifier {
 
   Future<void> loadDriverDocuments(String driverId) async {
     if (!_useSupabase) {
-      _documentsByDriver[driverId] = _demoDriverDocuments
-          .map((d) => DriverDocument(
-                id: d.id,
-                driverId: driverId,
-                documentType: d.documentType,
-                filePath: d.filePath,
-                status: d.status,
-                uploadedAt: d.uploadedAt,
-              ))
-          .toList();
+      if (!_documentsByDriver.containsKey(driverId)) {
+        _documentsByDriver[driverId] = driverId == 'demo-driver-new'
+            ? <DriverDocument>[]
+            : _demoDriverDocuments
+                .map((d) => DriverDocument(
+                      id: d.id,
+                      driverId: driverId,
+                      documentType: d.documentType,
+                      filePath: d.filePath,
+                      status: d.status,
+                      uploadedAt: d.uploadedAt,
+                    ))
+                .toList();
+      }
       notifyListeners();
       return;
     }
 
+    _error = null;
     try {
       final rows = await SupabaseService.client
           .from('driver_documents')
@@ -490,9 +464,10 @@ class FleetDataService extends ChangeNotifier {
       _documentsByDriver[driverId] = (rows as List)
           .map((row) => DriverDocument.fromJson(row as Map<String, dynamic>))
           .toList();
+      _error = null;
       notifyListeners();
     } catch (e) {
-      _error = 'Could not load documents: $e';
+      _failLoad(e, 'We couldn\'t load the documents.');
       notifyListeners();
     }
   }
@@ -557,6 +532,7 @@ class FleetDataService extends ChangeNotifier {
     }
 
     _adminLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
@@ -568,9 +544,9 @@ class FleetDataService extends ChangeNotifier {
       _vehicles = (rows as List)
           .map((row) => Vehicle.fromJson(row as Map<String, dynamic>))
           .toList();
+      _error = null;
     } catch (e) {
-      _error = 'Could not load vehicles: $e';
-      _vehicles = [_demoVehicle];
+      _failLoad(e, 'We couldn\'t load the vehicles.');
     } finally {
       _adminLoading = false;
       notifyListeners();
@@ -701,6 +677,7 @@ class FleetDataService extends ChangeNotifier {
     }
 
     _adminLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
@@ -740,9 +717,9 @@ class FleetDataService extends ChangeNotifier {
           vehicleLabel: vehicleLabel,
         );
       }).toList();
+      _error = null;
     } catch (e) {
-      _error = 'Could not load check-ins: $e';
-      _fleetCheckIns = [];
+      _failLoad(e, 'We couldn\'t load check-ins.');
     } finally {
       _adminLoading = false;
       notifyListeners();
@@ -763,6 +740,7 @@ class FleetDataService extends ChangeNotifier {
     }
 
     _adminLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
@@ -787,9 +765,9 @@ class FleetDataService extends ChangeNotifier {
           dayDate: dayDate,
         );
       }).toList();
+      _error = null;
     } catch (e) {
-      _error = 'Could not load expenses: $e';
-      _fleetExpenses = [];
+      _failLoad(e, 'We couldn\'t load expenses.');
     } finally {
       _adminLoading = false;
       notifyListeners();
@@ -817,6 +795,7 @@ class FleetDataService extends ChangeNotifier {
     }
 
     _adminLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
@@ -835,8 +814,9 @@ class FleetDataService extends ChangeNotifier {
         fromDate: monthStart,
         toDate: today,
       );
+      _error = null;
     } catch (e) {
-      _error = 'Could not load reports: $e';
+      _failLoad(e, 'We couldn\'t load the reports.');
     } finally {
       _adminLoading = false;
       notifyListeners();
@@ -941,6 +921,13 @@ class FleetDataService extends ChangeNotifier {
       _todayDriverDay = _demoTodayDriverDay;
       _recentDriverDays = _demoRecentDriverDays;
       _todayExpenses = _demoTodayExpenses;
+      _expensesByDay
+        ..clear()
+        ..addEntries(
+          _demoRecentDriverDays.map(
+            (day) => MapEntry(day.id, _demoExpensesForDay(day.id)),
+          ),
+        );
       notifyListeners();
       return;
     }
@@ -1038,11 +1025,7 @@ class FleetDataService extends ChangeNotifier {
 
       _error = null;
     } catch (e) {
-      _error = 'Could not load dashboard: $e';
-      _assignedVehicle ??= _demoVehicle;
-      _todayDriverDay ??= _demoTodayDriverDay;
-      _recentDriverDays = _demoRecentDriverDays;
-      _todayExpenses = _demoTodayExpenses;
+      _failLoad(e, 'We couldn\'t load today\'s log.');
     } finally {
       _driverLoading = false;
       notifyListeners();
@@ -1274,6 +1257,7 @@ class FleetDataService extends ChangeNotifier {
   }
 
   /// Add a fuel or other expense entry. Returns null on success.
+  /// When [receiptBytes] is set, the receipt is stored and linked before success.
   Future<String?> addExpenseEntry({
     required String driverId,
     required String driverDayId,
@@ -1281,6 +1265,8 @@ class FleetDataService extends ChangeNotifier {
     required ExpenseType type,
     required double amount,
     String? description,
+    Uint8List? receiptBytes,
+    String? receiptExtension,
   }) async {
     if (!_useSupabase) {
       final expense = Expense(
@@ -1289,6 +1275,9 @@ class FleetDataService extends ChangeNotifier {
         type: type,
         amount: amount,
         description: description,
+        receiptPath: receiptBytes == null
+            ? null
+            : '$driverId/receipts/demo.$receiptExtension',
       );
       _todayExpenses = [..._todayExpenses, expense];
       _expensesByDay.putIfAbsent(driverDayId, () => []).add(expense);
@@ -1323,23 +1312,72 @@ class FleetDataService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await SupabaseService.client.from('expenses').insert({
+      final inserted = await SupabaseService.client.from('expenses').insert({
         'driver_day_id': driverDayId,
         'driver_id': driverId,
         'vehicle_id': vehicleId,
         'type': type.name,
         'amount': amount,
         'description': description?.trim().isEmpty == true ? null : description?.trim(),
-      });
+      }).select('id').single();
+
+      final expenseId = inserted['id'] as String;
+      if (receiptBytes != null && receiptExtension != null) {
+        try {
+          final path = await StorageService.uploadExpenseReceipt(
+            driverId: driverId,
+            expenseId: expenseId,
+            bytes: receiptBytes,
+            extension: receiptExtension,
+          );
+          await SupabaseService.client.from('expenses').update({
+            'receipt_path': path,
+          }).eq('id', expenseId).eq('driver_id', driverId);
+        } catch (e) {
+          debugPrint('Receipt upload failed: $e');
+          try {
+            await SupabaseService.client
+                .from('expenses')
+                .delete()
+                .eq('id', expenseId)
+                .eq('driver_id', driverId);
+          } catch (rollbackError) {
+            debugPrint('Could not remove expense after receipt failure: $rollbackError');
+            return 'The expense was saved, but the receipt did not upload.';
+          }
+          return 'The receipt did not upload, so nothing was saved. Try again.';
+        }
+      }
 
       await loadDriverDashboard(driverId);
       return null;
     } catch (e) {
-      return 'Could not save expense: $e';
+      debugPrint('Could not save expense: $e');
+      return 'Could not save this expense. Check your connection and try again.';
     } finally {
       _isSubmitting = false;
       notifyListeners();
     }
+  }
+
+  void _failLoad(Object error, String message) {
+    debugPrint('Fleet load failed: $error');
+    final text = error.toString().toLowerCase();
+    if (text.contains('socket') ||
+        text.contains('network') ||
+        text.contains('failed host lookup') ||
+        text.contains('connection')) {
+      _error = 'No connection. Check your signal and try again.';
+      return;
+    }
+    if (text.contains('jwt') ||
+        text.contains('401') ||
+        text.contains('permission denied') ||
+        text.contains('42501')) {
+      _error = 'Your session could not be verified. Sign in again, then retry.';
+      return;
+    }
+    _error = message;
   }
 
   static double parseAmount(String value) =>
