@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_toast.dart';
 import '../../../models/models.dart';
+import '../../../core/widgets/load_error_view.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/fleet_data_service.dart';
 import '../../../services/storage_service.dart';
@@ -36,9 +37,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     final auth = context.watch<AuthService>();
     final fleet = context.watch<FleetDataService>();
     final driverId = auth.currentUser?.id;
-    final docs = driverId != null
-        ? fleet.documentsForDriver(driverId)
-        : FleetDataService.driverDocuments;
+    final docs = driverId == null ? const <DriverDocument>[] : fleet.documentsForDriver(driverId);
+    final showLoadError = fleet.error != null && docs.isEmpty && !fleet.driverLoading;
 
     return Scaffold(
       appBar: AppBar(
@@ -58,7 +58,13 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               style: AppTextStyles.body(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 20),
-            if (docs.isEmpty)
+            if (showLoadError)
+              LoadErrorView(
+                title: 'Documents unavailable',
+                message: fleet.error!,
+                onRetry: _loadDocuments,
+              )
+            else if (docs.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 32),
                 child: Text(

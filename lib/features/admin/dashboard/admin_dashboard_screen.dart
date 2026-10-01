@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/hero_stat_card.dart';
+import '../../../core/widgets/load_error_view.dart';
 import '../../../core/widgets/pastel_data_card.dart';
 import '../../../models/models.dart';
 import '../../../services/fleet_data_service.dart';
@@ -24,7 +25,13 @@ class AdminDashboardScreen extends StatelessWidget {
     return SafeArea(
       child: fleet.adminLoading && summary == null
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
+          : fleet.error != null && summary == null
+              ? LoadErrorView(
+                  title: 'Dashboard unavailable',
+                  message: fleet.error!,
+                  onRetry: () => fleet.loadAdminDashboard(),
+                )
+              : RefreshIndicator(
               onRefresh: () => fleet.loadAdminDashboard(),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -37,8 +44,13 @@ class AdminDashboardScreen extends StatelessWidget {
                       subtitle: 'Fleet overview',
                     ),
                     if (fleet.error != null) ...[
-                      const SizedBox(height: 12),
-                      Text(fleet.error!, style: AppTextStyles.body(color: AppColors.error)),
+                      const SizedBox(height: 16),
+                      LoadErrorView(
+                        title: 'Couldn\'t refresh',
+                        message: fleet.error!,
+                        onRetry: () => fleet.loadAdminDashboard(),
+                        compact: true,
+                      ),
                     ],
                     const SizedBox(height: 24),
                     Text('DRIVERS', style: AppTextStyles.label()),

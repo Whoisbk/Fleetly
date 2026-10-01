@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_toast.dart';
+import '../../../core/widgets/load_error_view.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../models/models.dart';
 import '../../../services/fleet_data_service.dart';
@@ -75,7 +76,13 @@ class _PendingApprovalsScreenState extends State<PendingApprovalsScreen> {
       ),
       body: fleet.adminLoading && drivers.isEmpty
           ? const Center(child: CircularProgressIndicator())
-          : drivers.isEmpty
+          : fleet.error != null && drivers.isEmpty
+              ? LoadErrorView(
+                  title: 'Approvals unavailable',
+                  message: fleet.error!,
+                  onRetry: () => fleet.loadAdminDashboard(),
+                )
+              : drivers.isEmpty
               ? Center(
                   child: Text('No pending applications', style: AppTextStyles.body(color: AppColors.textSecondary)),
                 )

@@ -8,6 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/hero_stat_card.dart';
+import '../../../core/widgets/load_error_view.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/summary_row.dart';
 import '../../../models/models.dart';
@@ -43,8 +44,20 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
     final expenses = fleet.todayExpenses;
     final dateLabel = DateFormat('d MMMM yyyy').format(DateTime.now());
 
-    if (fleet.driverLoading && today == null) {
+    final nothingLoaded = today == null && fleet.recentDriverDays.isEmpty;
+
+    if (fleet.driverLoading && nothingLoaded) {
       return const SafeArea(child: Center(child: CircularProgressIndicator()));
+    }
+
+    if (fleet.error != null && nothingLoaded) {
+      return SafeArea(
+        child: LoadErrorView(
+          title: 'Daily log unavailable',
+          message: fleet.error!,
+          onRetry: _refresh,
+        ),
+      );
     }
 
     return SafeArea(
@@ -61,6 +74,15 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                 subtitle: dateLabel,
               ),
               const SizedBox(height: 24),
+              if (fleet.error != null) ...[
+                LoadErrorView(
+                  title: 'Couldn\'t refresh',
+                  message: fleet.error!,
+                  onRetry: _refresh,
+                  compact: true,
+                ),
+                const SizedBox(height: 16),
+              ],
               if (today == null || today.status != DriverDayStatus.active) ...[
                 Container(
                   width: double.infinity,

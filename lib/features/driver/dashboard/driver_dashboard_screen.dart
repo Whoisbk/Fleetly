@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/hero_stat_card.dart';
+import '../../../core/widgets/load_error_view.dart';
 import '../../../core/widgets/pastel_data_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/timeline_entry.dart';
@@ -47,9 +48,20 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
         .take(2)
         .toList();
     final hasActiveDay = today?.status == DriverDayStatus.active;
+    final hasDriverData = vehicle != null || today != null || recent.isNotEmpty;
 
-    if (fleet.driverLoading && today == null && vehicle == null) {
+    if (fleet.driverLoading && !hasDriverData) {
       return const SafeArea(child: Center(child: CircularProgressIndicator()));
+    }
+
+    if (fleet.error != null && !hasDriverData) {
+      return SafeArea(
+        child: LoadErrorView(
+          title: 'Dashboard unavailable',
+          message: fleet.error!,
+          onRetry: _loadData,
+        ),
+      );
     }
 
     return SafeArea(
@@ -72,10 +84,12 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                 ),
               ),
               if (fleet.error != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  fleet.error!,
-                  style: AppTextStyles.body(color: AppColors.error),
+                const SizedBox(height: 16),
+                LoadErrorView(
+                  title: 'Couldn\'t refresh',
+                  message: fleet.error!,
+                  onRetry: _loadData,
+                  compact: true,
                 ),
               ],
               const SizedBox(height: 24),
