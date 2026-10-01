@@ -58,14 +58,13 @@ create policy "users_insert_own_profile" on public.profiles
     and status = 'pending'
   );
 
+-- Do not read profiles from this policy. A subquery on the same table
+-- raises 42P17 (infinite recursion). Role and status are locked by
+-- protect_profile_role_status instead.
 drop policy if exists "users_update_own_profile" on public.profiles;
 create policy "users_update_own_profile" on public.profiles
   for update using ((select public.current_uid()) = id)
-  with check (
-    (select public.current_uid()) = id
-    and role = (select p.role from public.profiles p where p.id = public.current_uid())
-    and status = (select p.status from public.profiles p where p.id = public.current_uid())
-  );
+  with check ((select public.current_uid()) = id);
 
 -- Drivers may upload documents, and a re-upload stays pending.
 -- They cannot mark a document approved or rejected.

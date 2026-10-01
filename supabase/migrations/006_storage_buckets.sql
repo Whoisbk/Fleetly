@@ -32,18 +32,24 @@ drop policy if exists "storage_expense_receipts_insert" on storage.objects;
 drop policy if exists "storage_expense_receipts_update" on storage.objects;
 drop policy if exists "storage_expense_receipts_delete" on storage.objects;
 
--- True when the object's first path segment matches the authenticated Firebase UID.
+-- True when the object's first path segment matches the signed-in Firebase UID.
+-- split_part avoids storage.foldername, which the request role may not be
+-- allowed to call. An empty uid (no Firebase token) never matches.
 create or replace function public.storage_driver_owns_folder(object_name text)
 returns boolean
 language sql
 stable
+set search_path = public
 as $$
-  select coalesce((storage.foldername(object_name))[1], '') = public.current_uid()
+  select split_part(coalesce(object_name, ''), '/', 1) = public.current_uid()
     and public.current_uid() <> '';
 $$;
 
+-- No TO authenticated. Firebase ID tokens are not the authenticated role,
+-- so a role-restricted policy never applies and every upload is rejected.
+-- current_uid() still requires a signed-in Firebase user.
 create policy "storage_fleet_files_select" on storage.objects
-  for select to authenticated
+  for select
   using (
     bucket_id = 'fleet-files'
     and (
@@ -53,14 +59,14 @@ create policy "storage_fleet_files_select" on storage.objects
   );
 
 create policy "storage_fleet_files_insert" on storage.objects
-  for insert to authenticated
+  for insert
   with check (
     bucket_id = 'fleet-files'
     and public.storage_driver_owns_folder(name)
   );
 
 create policy "storage_fleet_files_update" on storage.objects
-  for update to authenticated
+  for update
   using (
     bucket_id = 'fleet-files'
     and public.storage_driver_owns_folder(name)
@@ -71,7 +77,7 @@ create policy "storage_fleet_files_update" on storage.objects
   );
 
 create policy "storage_fleet_files_delete" on storage.objects
-  for delete to authenticated
+  for delete
   using (
     bucket_id = 'fleet-files'
     and (
