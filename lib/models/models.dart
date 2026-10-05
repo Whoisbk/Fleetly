@@ -143,6 +143,7 @@ class DriverDay {
     this.endedAt,
     this.startingOdometer,
     this.endingOdometer,
+    this.distanceKm = 0,
     this.totalEarnings = 0,
     this.notes,
     this.status = DriverDayStatus.active,
@@ -158,6 +159,9 @@ class DriverDay {
   final DateTime? endedAt;
   final int? startingOdometer;
   final int? endingOdometer;
+
+  /// Kilometres recorded from GPS during this day.
+  final double distanceKm;
   final double totalEarnings;
   final String? notes;
   final DriverDayStatus status;
@@ -180,6 +184,7 @@ class DriverDay {
       endedAt: _parseDateTime(json['ended_at']),
       startingOdometer: json['starting_odometer'] as int?,
       endingOdometer: json['ending_odometer'] as int?,
+      distanceKm: _parseAmount(json['distance_km']),
       totalEarnings: _parseAmount(json['total_earnings']),
       notes: json['notes'] as String?,
       status: _parseDriverDayStatus(json['status'] as String?),

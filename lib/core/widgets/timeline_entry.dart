@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../utils/currency_formatter.dart';
+import '../utils/distance_formatter.dart';
 
 class TimelineEntry extends StatelessWidget {
   const TimelineEntry({
@@ -12,6 +13,7 @@ class TimelineEntry extends StatelessWidget {
     required this.fuel,
     required this.expenses,
     required this.isLast,
+    this.distanceKm,
     this.color = AppColors.lavender,
   });
 
@@ -20,6 +22,7 @@ class TimelineEntry extends StatelessWidget {
   final double fuel;
   final double expenses;
   final bool isLast;
+  final double? distanceKm;
   final Color color;
 
   double get net => earnings - fuel - expenses;
@@ -70,7 +73,8 @@ class TimelineEntry extends StatelessWidget {
                         Text(dateLabel, style: AppTextStyles.sectionTitle()),
                         Text(
                           'Net ${CurrencyFormatter.format(net)}',
-                          style: AppTextStyles.body().copyWith(fontWeight: FontWeight.w700),
+                          style: AppTextStyles.body()
+                              .copyWith(fontWeight: FontWeight.w700),
                         ),
                       ],
                     ),
@@ -78,11 +82,27 @@ class TimelineEntry extends StatelessWidget {
                     _row('Earnings', earnings),
                     _row('Fuel', fuel),
                     _row('Expenses', expenses),
+                    if (distanceKm != null && distanceKm! > 0)
+                      _textRow('Distance', formatDistanceKm(distanceKm!)),
                   ],
                 ),
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _textRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: AppTextStyles.body(color: AppColors.textSecondary)),
+          Text(value, style: AppTextStyles.body()),
         ],
       ),
     );
@@ -94,7 +114,8 @@ class TimelineEntry extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTextStyles.body(color: AppColors.textSecondary)),
+          Text(label,
+              style: AppTextStyles.body(color: AppColors.textSecondary)),
           Text(CurrencyFormatter.format(amount), style: AppTextStyles.body()),
         ],
       ),

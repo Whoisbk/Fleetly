@@ -1102,7 +1102,6 @@ class FleetDataService extends ChangeNotifier {
   Future<String?> startDay({
     required String driverId,
     required String vehicleId,
-    required int startingOdometer,
   }) async {
     if (!_useSupabase) {
       _todayDriverDay = DriverDay(
@@ -1111,7 +1110,6 @@ class FleetDataService extends ChangeNotifier {
         vehicleId: vehicleId,
         date: DateTime.now(),
         startedAt: DateTime.now(),
-        startingOdometer: startingOdometer,
         status: DriverDayStatus.active,
       );
       _recentDriverDays = [_todayDriverDay!, ..._recentDriverDays.where((d) => d.id != 'day-today')];
@@ -1145,7 +1143,7 @@ class FleetDataService extends ChangeNotifier {
         'vehicle_id': vehicleId,
         'date': today,
         'started_at': DateTime.now().toUtc().toIso8601String(),
-        'starting_odometer': startingOdometer,
+        'distance_km': 0,
         'status': 'active',
       });
 
@@ -1163,9 +1161,10 @@ class FleetDataService extends ChangeNotifier {
   Future<String?> endDay({
     required String driverId,
     required String driverDayId,
-    required int endingOdometer,
+    required double distanceKm,
     String? notes,
   }) async {
+    final km = double.parse(distanceKm.toStringAsFixed(2));
     if (!_useSupabase) {
       final today = _todayDriverDay;
       if (today == null) return 'No active day to submit';
@@ -1177,7 +1176,7 @@ class FleetDataService extends ChangeNotifier {
         startedAt: today.startedAt,
         endedAt: DateTime.now(),
         startingOdometer: today.startingOdometer,
-        endingOdometer: endingOdometer,
+        distanceKm: km,
         totalEarnings: today.totalEarnings,
         notes: notes?.trim().isEmpty == true ? null : notes?.trim(),
         status: DriverDayStatus.completed,
@@ -1197,7 +1196,7 @@ class FleetDataService extends ChangeNotifier {
     try {
       await SupabaseService.client.from('driver_days').update({
         'ended_at': DateTime.now().toUtc().toIso8601String(),
-        'ending_odometer': endingOdometer,
+        'distance_km': km,
         'notes': notes?.trim().isEmpty == true ? null : notes?.trim(),
         'status': 'completed',
       }).eq('id', driverDayId).eq('driver_id', driverId);
@@ -1228,6 +1227,7 @@ class FleetDataService extends ChangeNotifier {
         date: today.date,
         startedAt: today.startedAt,
         startingOdometer: today.startingOdometer,
+        distanceKm: today.distanceKm,
         totalEarnings: amount,
         notes: today.notes,
         status: today.status,
@@ -1297,6 +1297,7 @@ class FleetDataService extends ChangeNotifier {
           date: today.date,
           startedAt: today.startedAt,
           startingOdometer: today.startingOdometer,
+          distanceKm: today.distanceKm,
           totalEarnings: today.totalEarnings,
           notes: today.notes,
           status: today.status,
@@ -1383,9 +1384,6 @@ class FleetDataService extends ChangeNotifier {
   static double parseAmount(String value) =>
       double.parse(value.replaceAll(',', '').trim());
 
-  static int parseOdometer(String value) =>
-      int.parse(value.replaceAll(',', '').trim());
-
   String _todayDateString() {
     final now = DateTime.now();
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
@@ -1427,7 +1425,6 @@ class FleetDataService extends ChangeNotifier {
         vehicleId: _demoVehicle.id,
         date: DateTime.now(),
         startedAt: DateTime.now().subtract(const Duration(hours: 3)),
-        startingOdometer: 123450,
         totalEarnings: 1850,
         fuelTotal: 350,
         expenseTotal: 1200,
@@ -1446,8 +1443,7 @@ class FleetDataService extends ChangeNotifier {
           fuelTotal: 300,
           expenseTotal: 0,
           status: DriverDayStatus.completed,
-          startingOdometer: 123100,
-          endingOdometer: 123450,
+          distanceKm: 86.4,
         ),
         DriverDay(
           id: 'day-2',
@@ -1458,8 +1454,7 @@ class FleetDataService extends ChangeNotifier {
           fuelTotal: 400,
           expenseTotal: 250,
           status: DriverDayStatus.completed,
-          startingOdometer: 122800,
-          endingOdometer: 123100,
+          distanceKm: 74.2,
         ),
       ];
 

@@ -70,21 +70,4 @@ abstract final class FormValidators {
     if (amount < 0) return 'Amount cannot be negative';
     return null;
   }
-
-  static String? odometer(String? value, {int? minValue}) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Odometer reading is required';
-    }
-    final km = int.tryParse(value.replaceAll(',', '').trim());
-    if (km == null) {
-      return 'Enter a valid number';
-    }
-    if (km < 0) {
-      return 'Odometer cannot be negative';
-    }
-    if (minValue != null && km < minValue) {
-      return 'Must be greater than starting KM ($minValue)';
-    }
-    return null;
-  }
 }

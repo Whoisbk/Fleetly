@@ -32,8 +32,8 @@ One screen answers: "What did this driver do today?"
 ## Daily Log Flow
 
 ```
-START DAY → select taxi, date, starting KM → work →
-add earnings/fuel/expenses/notes → END DAY → submit
+START DAY → select taxi, date, GPS starts → work →
+add earnings/fuel/expenses/notes → END DAY → summary shows tracked km
 ```
 
 ## Driver Onboarding (3 steps)

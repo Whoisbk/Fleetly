@@ -8,12 +8,16 @@ class SummaryRow extends StatelessWidget {
     super.key,
     required this.label,
     required this.amount,
+    this.valueText,
     this.isTotal = false,
     this.isNet = false,
   });
 
   final String label;
   final double amount;
+
+  /// When set, shown in place of the currency amount (for example kilometres).
+  final String? valueText;
   final bool isTotal;
   final bool isNet;
 
@@ -31,7 +35,7 @@ class SummaryRow extends StatelessWidget {
                 : AppTextStyles.body(color: AppColors.textSecondary),
           ),
           Text(
-            CurrencyFormatter.format(amount),
+            valueText ?? CurrencyFormatter.format(amount),
             style: isTotal || isNet
                 ? AppTextStyles.sectionTitle()
                 : AppTextStyles.body().copyWith(fontWeight: FontWeight.w600),

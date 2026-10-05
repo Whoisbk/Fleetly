@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'services/auth_service.dart';
+import 'services/distance_tracking_service.dart';
 import 'services/firebase_service.dart';
 import 'services/fleet_data_service.dart';
 import 'services/supabase_service.dart';
@@ -20,12 +21,14 @@ Future<void> main() async {
 
   final fleetDataService = FleetDataService();
   final themeService = ThemeService();
+  final distanceTrackingService = DistanceTrackingService();
   await themeService.initialize();
 
   runApp(FleetlyApp(
     authService: authService,
     fleetDataService: fleetDataService,
     themeService: themeService,
+    distanceTrackingService: distanceTrackingService,
   ));
 }
 
@@ -35,11 +38,13 @@ class FleetlyApp extends StatelessWidget {
     required this.authService,
     required this.fleetDataService,
     required this.themeService,
+    required this.distanceTrackingService,
   });
 
   final AuthService authService;
   final FleetDataService fleetDataService;
   final ThemeService themeService;
+  final DistanceTrackingService distanceTrackingService;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +53,7 @@ class FleetlyApp extends StatelessWidget {
         ChangeNotifierProvider.value(value: authService),
         ChangeNotifierProvider.value(value: fleetDataService),
         ChangeNotifierProvider.value(value: themeService),
+        ChangeNotifierProvider.value(value: distanceTrackingService),
       ],
       child: Consumer<ThemeService>(
         builder: (context, themeService, _) {

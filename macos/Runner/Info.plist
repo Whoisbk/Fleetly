@@ -28,5 +28,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSLocationUsageDescription</key>
+	<string>Fleetly tracks the kilometres you drive from the moment you start your day until you end it.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Fleetly tracks the kilometres you drive from the moment you start your day until you end it.</string>
 </dict>
 </plist>

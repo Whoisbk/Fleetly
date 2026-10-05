@@ -12,9 +12,11 @@ import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/timeline_entry.dart';
 import '../../../models/models.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/distance_tracking_service.dart';
 import '../../../services/fleet_data_service.dart';
 import '../widgets/driver_drawer.dart';
 import '../widgets/driver_page_header.dart';
+import '../widgets/live_distance_card.dart';
 
 class DriverDashboardScreen extends StatefulWidget {
   const DriverDashboardScreen({super.key});
@@ -43,11 +45,10 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
     final fleet = context.watch<FleetDataService>();
     final vehicle = fleet.assignedVehicle;
     final today = fleet.todayDriverDay;
-    final recent = fleet.recentDriverDays
-        .where((d) => d.id != today?.id)
-        .take(2)
-        .toList();
+    final recent =
+        fleet.recentDriverDays.where((d) => d.id != today?.id).take(2).toList();
     final hasActiveDay = today?.status == DriverDayStatus.active;
+    final tracker = context.watch<DistanceTrackingService>();
     final hasDriverData = vehicle != null || today != null || recent.isNotEmpty;
 
     if (fleet.driverLoading && !hasDriverData) {
@@ -74,13 +75,16 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               DriverPageHeader(
-                title: user.firstName.isNotEmpty ? '${user.firstName} 👋' : 'Hello 👋',
+                title: user.firstName.isNotEmpty
+                    ? '${user.firstName} 👋'
+                    : 'Hello 👋',
                 subtitle: 'Good morning,',
                 subtitleFirst: true,
                 trailing: CircleAvatar(
                   radius: 24,
                   backgroundColor: AppColors.lavender,
-                  child: Text(user.avatarLetter, style: AppTextStyles.sectionTitle()),
+                  child: Text(user.avatarLetter,
+                      style: AppTextStyles.sectionTitle()),
                 ),
               ),
               if (fleet.error != null) ...[
@@ -105,13 +109,17 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                   children: [
                     Text('Taxi', style: AppTextStyles.label()),
                     if (vehicle != null) ...[
-                      Text(vehicle.displayName, style: AppTextStyles.sectionTitle()),
+                      Text(vehicle.displayName,
+                          style: AppTextStyles.sectionTitle()),
                       const SizedBox(height: 4),
-                      Text(vehicle.registrationNumber, style: AppTextStyles.body(color: AppColors.textSecondary)),
+                      Text(vehicle.registrationNumber,
+                          style: AppTextStyles.body(
+                              color: AppColors.textSecondary)),
                     ] else
                       Text(
                         'No vehicle assigned',
-                        style: AppTextStyles.sectionTitle(color: AppColors.textSecondary),
+                        style: AppTextStyles.sectionTitle(
+                            color: AppColors.textSecondary),
                       ),
                   ],
                 ),
@@ -126,6 +134,10 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                 accentColor: AppColors.mint,
               ),
               const SizedBox(height: 20),
+              if (hasActiveDay) ...[
+                LiveDistanceCard(day: today!),
+                const SizedBox(height: 20),
+              ],
               if (!hasActiveDay)
                 PrimaryButton(
                   label: 'Check In',
@@ -200,7 +212,8 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                     onTap: () => DriverShellScope.of(context)?.onTabSelected(3),
                     child: Text(
                       'View All >',
-                      style: AppTextStyles.body().copyWith(fontWeight: FontWeight.w600),
+                      style: AppTextStyles.body()
+                          .copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
@@ -214,12 +227,17 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
               else
                 ...recent.asMap().entries.map((entry) {
                   final day = entry.value;
-                  final colors = [AppColors.lavender, AppColors.mint, AppColors.peach];
+                  final colors = [
+                    AppColors.lavender,
+                    AppColors.mint,
+                    AppColors.peach
+                  ];
                   return TimelineEntry(
                     date: day.date,
                     earnings: day.totalEarnings,
                     fuel: day.fuelTotal,
                     expenses: day.expenseTotal,
+                    distanceKm: tracker.kmForDay(day.id, day.distanceKm),
                     isLast: entry.key == recent.length - 1,
                     color: colors[entry.key % colors.length],
                   );
@@ -260,7 +278,9 @@ class _QuickAction extends StatelessWidget {
             children: [
               Icon(icon, size: 24),
               const SizedBox(height: 8),
-              Text(label, style: AppTextStyles.body().copyWith(fontSize: 13, fontWeight: FontWeight.w600)),
+              Text(label,
+                  style: AppTextStyles.body()
+                      .copyWith(fontSize: 13, fontWeight: FontWeight.w600)),
             ],
           ),
         ),

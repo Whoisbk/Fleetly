@@ -22,8 +22,10 @@ Create vehicles now even if V1 is light. `driver_vehicle` tracks assignment hist
 ### `driver_days` (core MVP table)
 ```
 driver_id, vehicle_id, date, started_at, ended_at,
-starting_odometer, ending_odometer, total_earnings, notes, status
+distance_km, total_earnings, notes, status
 ```
+
+`distance_km` is filled by GPS while the day is active. `starting_odometer` and `ending_odometer` remain for older rows.
 
 ### `expenses` (linked to driver_days)
 ```

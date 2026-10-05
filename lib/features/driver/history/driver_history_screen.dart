@@ -5,6 +5,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/load_error_view.dart';
 import '../../../core/widgets/timeline_entry.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/distance_tracking_service.dart';
 import '../../../services/fleet_data_service.dart';
 
 class DriverHistoryScreen extends StatefulWidget {
@@ -31,6 +32,7 @@ class _DriverHistoryScreenState extends State<DriverHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final fleet = context.watch<FleetDataService>();
+    final tracker = context.watch<DistanceTrackingService>();
     final days = fleet.recentDriverDays;
 
     if (fleet.driverLoading && days.isEmpty) {
@@ -85,12 +87,17 @@ class _DriverHistoryScreenState extends State<DriverHistoryScreen> {
                   ],
                   ...days.asMap().entries.map((entry) {
                     final day = entry.value;
-                    final colors = [AppColors.lavender, AppColors.mint, AppColors.peach];
+                    final colors = [
+                      AppColors.lavender,
+                      AppColors.mint,
+                      AppColors.peach
+                    ];
                     return TimelineEntry(
                       date: day.date,
                       earnings: day.totalEarnings,
                       fuel: day.fuelTotal,
                       expenses: day.expenseTotal,
+                      distanceKm: tracker.kmForDay(day.id, day.distanceKm),
                       isLast: entry.key == days.length - 1,
                       color: colors[entry.key % colors.length],
                     );

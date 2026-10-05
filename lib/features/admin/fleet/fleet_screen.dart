@@ -6,6 +6,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/utils/distance_formatter.dart';
 import '../../../core/widgets/load_error_view.dart';
 import '../../../core/widgets/pill_segment.dart';
 import '../../../models/models.dart';
@@ -279,6 +280,8 @@ class _CheckInsList extends StatelessWidget {
                   _MiniStat(label: 'Earnings', value: CurrencyFormatter.format(day.totalEarnings)),
                   const SizedBox(width: 16),
                   _MiniStat(label: 'Net', value: CurrencyFormatter.format(day.net)),
+                  const SizedBox(width: 16),
+                  _MiniStat(label: 'Distance', value: formatDistanceKm(day.distanceKm)),
                 ],
               ),
             ],

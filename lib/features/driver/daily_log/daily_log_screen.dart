@@ -7,13 +7,16 @@ import '../widgets/driver_page_header.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/utils/distance_formatter.dart';
 import '../../../core/widgets/hero_stat_card.dart';
 import '../../../core/widgets/load_error_view.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/summary_row.dart';
 import '../../../models/models.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/distance_tracking_service.dart';
 import '../../../services/fleet_data_service.dart';
+import '../widgets/live_distance_card.dart';
 
 class DailyLogScreen extends StatefulWidget {
   const DailyLogScreen({super.key});
@@ -39,6 +42,7 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
   @override
   Widget build(BuildContext context) {
     final fleet = context.watch<FleetDataService>();
+    final tracker = context.watch<DistanceTrackingService>();
     final today = fleet.todayDriverDay;
     final vehicle = fleet.assignedVehicle;
     final expenses = fleet.todayExpenses;
@@ -95,11 +99,13 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                     children: [
                       const Icon(Icons.wb_sunny_outlined, size: 48),
                       const SizedBox(height: 12),
-                      Text('No active day', style: AppTextStyles.sectionTitle()),
+                      Text('No active day',
+                          style: AppTextStyles.sectionTitle()),
                       const SizedBox(height: 8),
                       Text(
                         'Check in to start recording your day',
-                        style: AppTextStyles.body(color: AppColors.textSecondary),
+                        style:
+                            AppTextStyles.body(color: AppColors.textSecondary),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 20),
@@ -124,25 +130,26 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                     children: [
                       Text('Vehicle', style: AppTextStyles.label()),
                       if (vehicle != null) ...[
-                        Text(vehicle.displayName, style: AppTextStyles.sectionTitle()),
-                        Text(vehicle.registrationNumber, style: AppTextStyles.body(color: AppColors.textSecondary)),
+                        Text(vehicle.displayName,
+                            style: AppTextStyles.sectionTitle()),
+                        Text(vehicle.registrationNumber,
+                            style: AppTextStyles.body(
+                                color: AppColors.textSecondary)),
                       ] else
-                        Text('Not assigned', style: AppTextStyles.sectionTitle(color: AppColors.textSecondary)),
-                      if (today.startingOdometer != null) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          'Starting KM: ${today.startingOdometer}',
-                          style: AppTextStyles.body(color: AppColors.textSecondary),
-                        ),
-                      ],
+                        Text('Not assigned',
+                            style: AppTextStyles.sectionTitle(
+                                color: AppColors.textSecondary)),
                     ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                LiveDistanceCard(day: today),
                 const SizedBox(height: 20),
                 HeroStatCard(
                   label: "Today's Net",
                   value: CurrencyFormatter.format(today.net),
-                  subtitle: 'Earnings ${CurrencyFormatter.format(today.totalEarnings)}',
+                  subtitle:
+                      'Earnings ${CurrencyFormatter.format(today.totalEarnings)}',
                   accentColor: AppColors.lavender,
                 ),
                 const SizedBox(height: 24),
@@ -156,9 +163,17 @@ class _DailyLogScreenState extends State<DailyLogScreen> {
                   ),
                   child: Column(
                     children: [
-                      SummaryRow(label: 'Earnings', amount: today.totalEarnings),
+                      SummaryRow(
+                          label: 'Earnings', amount: today.totalEarnings),
                       SummaryRow(label: 'Fuel', amount: today.fuelTotal),
-                      SummaryRow(label: 'Other Expenses', amount: today.expenseTotal),
+                      SummaryRow(
+                          label: 'Other Expenses', amount: today.expenseTotal),
+                      SummaryRow(
+                        label: 'Distance',
+                        amount: 0,
+                        valueText: formatDistanceKm(
+                            tracker.kmForDay(today.id, today.distanceKm)),
+                      ),
                       const Divider(height: 24),
                       SummaryRow(label: 'Net', amount: today.net, isNet: true),
                     ],
@@ -246,11 +261,14 @@ class _ExpenseTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_label, style: AppTextStyles.body().copyWith(fontWeight: FontWeight.w600)),
+                Text(_label,
+                    style: AppTextStyles.body()
+                        .copyWith(fontWeight: FontWeight.w600)),
                 if (expense.description != null)
                   Text(
                     expense.description!,
-                    style: AppTextStyles.body(color: AppColors.textSecondary).copyWith(fontSize: 13),
+                    style: AppTextStyles.body(color: AppColors.textSecondary)
+                        .copyWith(fontSize: 13),
                   ),
               ],
             ),
